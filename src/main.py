@@ -15,8 +15,51 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 
 #callback function that lets us do whatever we need to do w/ out detected objects
 def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type" is exactly like in java where we do: public exampleMethod(int n) <-- the "int" is the ": int" in this case
-    print(f"Detected {len(result.detections)} object(s) at {timestamp_ms} ms")
+    # print(f"Detected {len(result.detections)} object(s) at {timestamp_ms} ms")
+    # print(f"Result: {result.detections}\n") 
+    #WHAT THIS LOOKS LIKE:
+        # [Detection(bounding_box=BoundingBox(origin_x=586, origin_y=404, width=739, height=667), categories=[Category(index=None, score=0.5782987475395203, display_name=None, category_name='person')], keypoints=None)]
+    # print(f"Result: {result}\n") 
+    #WHAT THIS LOOKS LIKE:
+        # DetectionResult(detections=
+        #                 [Detection(bounding_box=BoundingBox(origin_x=523, origin_y=407, width=816, height=676), categories=[Category(index=None, score=0.6019241213798523, display_name=None, category_name='person')], keypoints=None)]
+        #                 )
+    
+    #loops through the amount of objects it detects
+    for detection in range(0, len(result.detections)):
+        #to avoid "index out of range" error for the categories attribute (which is a list), if the length of it is greater than 1,
+        #simply loop through it. if it isn't (look to else block), just take the first index (the only available index) and use that
+        if len(result.detections[detection].categories) > 1:
+            for i in range(0, len(result.detections[detection].categories)):
+                print(f"object: {result.detections[detection].categories[i].category_name}")
+                print(f"confidence: {result.detections[detection].categories[i].score}")
+                print(f"x: {result.detections[detection].bounding_box.origin_x}")
+                print(f"y: {result.detections[detection].bounding_box.origin_y}")
+                print(f"width: {result.detections[detection].bounding_box.width}")
+                print(f"height: {result.detections[detection].bounding_box.height}")
+        else:
+            print(f"object: {result.detections[detection].categories[0].category_name}")
+            print(f"confidence: {result.detections[detection].categories[0].score}")
+            print(f"x: {result.detections[detection].bounding_box.origin_x}")
+            print(f"y: {result.detections[detection].bounding_box.origin_y}")
+            print(f"width: {result.detections[detection].bounding_box.width}")
+            print(f"height: {result.detections[detection].bounding_box.height}")
+    
+    print() #add a space/line break for eligibility
 
+    
+
+    #draw bounding boxes
+    # for detection in result.detections:
+    #     bounding_box = result.boundingBox
+    #     starting_point = bounding_box.originX, bounding_box.originY
+    #     ending_point = bounding_box.originX + bounding_box.width, bounding_box.originY + bounding_box.height
+
+    #     cv2.rectangle(output_image, starting_point, ending_point, (0, 255, 0)) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
+
+
+
+    
 #model params
 options = ObjectDetectorOptions(
     base_options=BaseOptions(model_asset_path="models/efficientdet_lite0_float32.tflite"),
