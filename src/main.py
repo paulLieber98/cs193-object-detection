@@ -54,8 +54,8 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         #mediapipe doesn't take in our numpy array image so we have to create an mp_image object and pass it into the model instead of passing in the numpy array
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
         #since we're processing a live video camera feed asynchronously, we need a timestamp to keep everything in check/in order
-        timestamp_ms = time.monotonic_ns() // 1_000_000 #returns a clock value that can't go backwards || divide by 1 million to make it 
-                                                        #in milliseconds because thats what the detect_async() takes
+        timestamp_ms = time.monotonic_ns() // 1_000_000 #returns a clock value that can't go backwards || divide by 1 million to convert it 
+                                                        #from nanoseconds to milliseconds because thats what the detect_async() takes
                                                         # + using "//" to make it an int since it only takes ints and not floats
 
         #runs detection model asynchronously WHILE openCV receives new frames + calls the callback function, passing in these args into the callback function
