@@ -18,3 +18,10 @@ Add warnings when obstacles are detected.
 Python
 OpenCV
 Google MediaPipe
+
+## installation + setup
+git clone https://github.com/paulLieber98/cs193-object-detection
+cd cs193-object-detection
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
