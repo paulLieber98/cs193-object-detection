@@ -1,6 +1,7 @@
 import cv2
 import mediapipe as mp
 import time
+import numpy as np
 
 #arg = which camera to use
 camera = cv2.VideoCapture(1)
@@ -25,6 +26,13 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         #                 [Detection(bounding_box=BoundingBox(origin_x=523, origin_y=407, width=816, height=676), categories=[Category(index=None, score=0.6019241213798523, display_name=None, category_name='person')], keypoints=None)]
         #                 )
     
+
+    #convert image BEFORE loop since this upcoming loop loops thru every INDIVIDUAL detection and we want to draw boxes for every detection
+    #at the same time, not individually.
+    #since cv2.rectangle takes in a numpy array image instead of mediapipe image, thankfully, mediapipe gives us a function that lets us
+    #convert an image passed in (as mp_image) into an ndarray for this exact reason:
+    ndarray_img = output_image.numpy_view().copy()
+
     #loops through the amount of objects it detects on current frame
     for detection in range(0, len(result.detections)):
         #to avoid "index out of range" error for the categories attribute (which is a list), if the length of it is greater than 1,
@@ -50,9 +58,6 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         starting_point = bbox.origin_x, bbox.origin_y
         ending_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
 
-        #since cv2.rectangle takes in a numpy array image instead of mediapipe image, thankfully, mediapipe gives us a function that lets us
-        #convert an mp image into an ndarray for this exact reason:
-        ndarray_img = mp_image.numpy_view().copy()
     
         cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 100) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
                                                                                                                     #image HAS TO BE A NUMPY ARRAY FORM
@@ -60,10 +65,8 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
     
     print() #add a space/line break for eligibility for terminal output
 
-    # print(f"mp image: {type(mp_image)}")
-    # print(f"output image: {type(output_image)}")
-    # ndarray_img = mp_image.numpy_view()
-    # print(type(ndarray_img))
+    
+
 
 
 
@@ -94,8 +97,8 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         if not ret:
             break
 
-        # #display window w/ frame showing live camera feed
-        # cv2.imshow("frame", frame)
+        #display window w/ frame showing live camera feed
+        cv2.imshow("frame", frame)
 
 
         #mediapipe takes in an a frame with the color order of RGB and NOT BGR so we have to convert here before passing into mp_image w/ cvtColor()
