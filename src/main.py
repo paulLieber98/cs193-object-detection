@@ -66,7 +66,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         #label boxes (object detections)
         cv2.putText(
             ndarray_img, 
-            result.detections[detection].categories[0].category_name, #
+            result.detections[detection].categories[0].category_name, 
             (result.detections[detection].bounding_box.origin_x, result.detections[detection].bounding_box.origin_y),
             cv2.FONT_HERSHEY_SIMPLEX, #random font
             1,
@@ -111,11 +111,17 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         if not ret:
             break
 
+        #display window w/ frame showing live camera feed
         if ndarray_img is None:
-            #display window w/ frame showing live camera feed
-            cv2.imshow("frame", frame) #regular frame
+            final_frame = frame
+            bgr_final_frame = cv2.cvtColor(final_frame, cv2.COLOR_RGB2BGR)
+            # bgr_final_frame = cv2.flip(bgr_final_frame, 1)
+            cv2.imshow("frame", bgr_final_frame) #regular frame
         else:
-            cv2.imshow("frame", ndarray_img) #drawn on frame w/ boxes in callback function
+            final_frame = ndarray_img
+            bgr_final_ndarray_img = cv2.cvtColor(final_frame, cv2.COLOR_RGB2BGR)
+            # bgr_final_ndarray_img = cv2.flip(bgr_final_ndarray_img, 1)
+            cv2.imshow("frame", bgr_final_ndarray_img) #drawn on frame w/ boxes in callback function
 
 
         #mediapipe takes in an a frame with the color order of RGB and NOT BGR so we have to convert here before passing into mp_image w/ cvtColor()
