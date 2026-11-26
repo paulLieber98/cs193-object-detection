@@ -37,7 +37,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
     #loops through the amount of objects it detects on current frame
     for detection in range(0, len(result.detections)):
         #to avoid "index out of range" error for the categories attribute (which is a list), if the length of it is greater than 1,
-        #simply loop through it. if it isn't (look to else block), just take the first index (the only available index) and use that
+        #simply loop through it. if it isn't (look at else block), just take the first index (the only available index) and use that.
         if len(result.detections[detection].categories) > 1:
             for i in range(0, len(result.detections[detection].categories)):
                 print(f"object: {result.detections[detection].categories[i].category_name}")
@@ -54,13 +54,25 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
             print(f"width: {result.detections[detection].bounding_box.width}")
             print(f"height: {result.detections[detection].bounding_box.height}")
 
-        #draw bounding boxes
+        #boxes + labels fields
         bbox = result.detections[detection].bounding_box
         starting_point = bbox.origin_x, bbox.origin_y
         ending_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
-    
+
+        #draw bounding boxes
         cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 3) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
                                                                                                                     #image HAS TO BE A NUMPY ARRAY FORM
+
+        #label boxes (object detections)
+        cv2.putText(
+            ndarray_img, 
+            result.detections[detection].categories[0].category_name, #
+            (result.detections[detection].bounding_box.origin_x, result.detections[detection].bounding_box.origin_y),
+            cv2.FONT_HERSHEY_SIMPLEX, #random font
+            1,
+            (255, 255, 255),
+            3
+        ) #PARAMS: cv2.putText(image, text, org, fontFace, fontScale, color, thickness)
 
     
     print() #add a space/line break for eligibility for terminal output
@@ -80,7 +92,7 @@ options = ObjectDetectorOptions(
     result_callback=on_result,
 )
 
-
+#initiating ndarray_img global variable
 ndarray_img = None
 
 # MAIN LOOP
