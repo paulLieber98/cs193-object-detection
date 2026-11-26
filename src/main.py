@@ -29,6 +29,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
 
     #convert image BEFORE loop since this upcoming loop loops thru every INDIVIDUAL detection and we want to draw boxes for every detection
     #at the same time, not individually.
+    global ndarray_img #make this global to be able to pass into cv2.imshow() later on (lets us use this frame w/ boxes instead of the one w/o boxes drawn)
     #since cv2.rectangle takes in a numpy array image instead of mediapipe image, thankfully, mediapipe gives us a function that lets us
     #convert an image passed in (as mp_image) into an ndarray for this exact reason:
     ndarray_img = output_image.numpy_view().copy()
@@ -57,9 +58,8 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         bbox = result.detections[detection].bounding_box
         starting_point = bbox.origin_x, bbox.origin_y
         ending_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
-
     
-        cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 100) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
+        cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 3) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
                                                                                                                     #image HAS TO BE A NUMPY ARRAY FORM
 
     
@@ -81,6 +81,8 @@ options = ObjectDetectorOptions(
 )
 
 
+ndarray_img = None
+
 # MAIN LOOP
 with ObjectDetector.create_from_options(options) as detector: #initialize object detector model | "with" = same thing as try-with-resources in java so it will close the model automatically
     # check if camera is opened
@@ -97,8 +99,11 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         if not ret:
             break
 
-        #display window w/ frame showing live camera feed
-        cv2.imshow("frame", frame)
+        if ndarray_img is None:
+            #display window w/ frame showing live camera feed
+            cv2.imshow("frame", frame) #regular frame
+        else:
+            cv2.imshow("frame", ndarray_img) #drawn on frame w/ boxes in callback function
 
 
         #mediapipe takes in an a frame with the color order of RGB and NOT BGR so we have to convert here before passing into mp_image w/ cvtColor()
@@ -118,7 +123,6 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
             #if everything was synchronous, we would have low frame rate
             #the model skips on a few frames , making it an asynchronous task.
         detector.detect_async(mp_image, timestamp_ms)
-        
 
         #let user break out of the webcam by pressing q
         if cv2.waitKey(1) == ord('q'):
