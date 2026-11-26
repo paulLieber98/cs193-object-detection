@@ -25,7 +25,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         #                 [Detection(bounding_box=BoundingBox(origin_x=523, origin_y=407, width=816, height=676), categories=[Category(index=None, score=0.6019241213798523, display_name=None, category_name='person')], keypoints=None)]
         #                 )
     
-    #loops through the amount of objects it detects
+    #loops through the amount of objects it detects on current frame
     for detection in range(0, len(result.detections)):
         #to avoid "index out of range" error for the categories attribute (which is a list), if the length of it is greater than 1,
         #simply loop through it. if it isn't (look to else block), just take the first index (the only available index) and use that
@@ -44,18 +44,26 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
             print(f"y: {result.detections[detection].bounding_box.origin_y}")
             print(f"width: {result.detections[detection].bounding_box.width}")
             print(f"height: {result.detections[detection].bounding_box.height}")
+
+        #draw bounding boxes
+        bbox = result.detections[detection].bounding_box
+        starting_point = bbox.origin_x, bbox.origin_y
+        ending_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
+
+        #since cv2.rectangle takes in a numpy array image instead of mediapipe image, thankfully, mediapipe gives us a function that lets us
+        #convert an mp image into an ndarray for this exact reason:
+        ndarray_img = mp_image.numpy_view().copy()
     
-    print() #add a space/line break for eligibility
+        cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 100) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
+                                                                                                                    #image HAS TO BE A NUMPY ARRAY FORM
 
     
+    print() #add a space/line break for eligibility for terminal output
 
-    #draw bounding boxes
-    # for detection in result.detections:
-    #     bounding_box = result.boundingBox
-    #     starting_point = bounding_box.originX, bounding_box.originY
-    #     ending_point = bounding_box.originX + bounding_box.width, bounding_box.originY + bounding_box.height
-
-    #     cv2.rectangle(output_image, starting_point, ending_point, (0, 255, 0)) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
+    # print(f"mp image: {type(mp_image)}")
+    # print(f"output image: {type(output_image)}")
+    # ndarray_img = mp_image.numpy_view()
+    # print(type(ndarray_img))
 
 
 
@@ -86,8 +94,8 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         if not ret:
             break
 
-        #display window w/ frame showing live camera feed
-        cv2.imshow("frame", frame)
+        # #display window w/ frame showing live camera feed
+        # cv2.imshow("frame", frame)
 
 
         #mediapipe takes in an a frame with the color order of RGB and NOT BGR so we have to convert here before passing into mp_image w/ cvtColor()
@@ -107,7 +115,7 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
             #if everything was synchronous, we would have low frame rate
             #the model skips on a few frames , making it an asynchronous task.
         detector.detect_async(mp_image, timestamp_ms)
-
+        
 
         #let user break out of the webcam by pressing q
         if cv2.waitKey(1) == ord('q'):
