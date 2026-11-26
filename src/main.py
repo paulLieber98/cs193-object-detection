@@ -87,7 +87,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
 options = ObjectDetectorOptions(
     base_options=BaseOptions(model_asset_path="models/efficientdet_lite0_float32.tflite"),
     running_mode=VisionRunningMode.LIVE_STREAM,
-    score_threshold=0.3,
+    score_threshold=0.4, #confidence score threshold to show guesses
     max_results=5, #will at most return the first n objects it sees (in this case 5)
     result_callback=on_result,
 )
