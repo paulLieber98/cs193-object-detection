@@ -66,7 +66,7 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         #label boxes (object detections)
         cv2.putText(
             ndarray_img, 
-            result.detections[detection].categories[0].category_name, 
+            f"{result.detections[detection].categories[0].category_name}: {str(round(result.detections[detection].categories[0].score * 100, 2))}% confident", #*100 for the percentage form
             (result.detections[detection].bounding_box.origin_x, result.detections[detection].bounding_box.origin_y),
             cv2.FONT_HERSHEY_SIMPLEX, #random font
             1,
