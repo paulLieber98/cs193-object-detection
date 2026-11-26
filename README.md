@@ -1,5 +1,3 @@
-# CS-193 HW09
-
 ## Project Goal
 
 --> Create a simple program that uses my laptop's webcam to detect objects in real time. I'm interested in computer vision, especially how autonomous robots can recognize their surroundings.
