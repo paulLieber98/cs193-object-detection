@@ -107,6 +107,9 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
                     # 500 pixels rows/height, 500 width/length/columns, 3 color channels(each 0-255)
         ret, frame = camera.read()
 
+        #flip horizontally so everything looks normal
+        frame = cv2.flip(frame, 1)
+
         #if ret not returned/retrieved, break out of loop
         if not ret:
             break
