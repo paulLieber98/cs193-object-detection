@@ -1,7 +1,6 @@
 import cv2
 import mediapipe as mp
 import time
-import numpy as np
 
 #arg = which camera to use
 camera = cv2.VideoCapture(1)
@@ -16,52 +15,36 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 
 #callback function that lets us do whatever we need to do w/ out detected objects
 def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type" is exactly like in java where we do: public exampleMethod(int n) <-- the "int" is the ": int" in this case
-    # print(f"Detected {len(result.detections)} object(s) at {timestamp_ms} ms")
-    # print(f"Result: {result.detections}\n") 
-    #WHAT THIS LOOKS LIKE:
-        # [Detection(bounding_box=BoundingBox(origin_x=586, origin_y=404, width=739, height=667), categories=[Category(index=None, score=0.5782987475395203, display_name=None, category_name='person')], keypoints=None)]
-    # print(f"Result: {result}\n") 
-    #WHAT THIS LOOKS LIKE:
-        # DetectionResult(detections=
-        #                 [Detection(bounding_box=BoundingBox(origin_x=523, origin_y=407, width=816, height=676), categories=[Category(index=None, score=0.6019241213798523, display_name=None, category_name='person')], keypoints=None)]
-        #                 )
-    
 
-    #convert image BEFORE loop since this upcoming loop loops thru every INDIVIDUAL detection and we want to draw boxes for every detection
+    # what "result" param looks like for reference (w/ random frame and random object detected):
+    # DetectionResult(
+    #   detections=[Detection(bounding_box=BoundingBox(origin_x=523, origin_y=407, width=816, height=676), 
+    #   categories=[Category(index=None, score=0.6019241213798523, display_name=None, category_name='person')], 
+    #   keypoints=None)]
+    # )
+
+    #convert image BEFORE loop since this upcoming loop loops thru every INDIVIDUAL detection and we want to draw boxes for EVERY detection
     #at the same time, not individually.
     global ndarray_img #make this global to be able to pass into cv2.imshow() later on (lets us use this frame w/ boxes instead of the one w/o boxes drawn)
-    #since cv2.rectangle takes in a numpy array image instead of mediapipe image, thankfully, mediapipe gives us a function that lets us
-    #convert an image passed in (as mp_image) into an ndarray for this exact reason:
-    ndarray_img = output_image.numpy_view().copy()
+    
+    ndarray_img = output_image.numpy_view().copy() #.numpy_view() lets us convert a mediapipe img into an ndarray + .copy() lets us edit it.. not just read only
 
     #loops through the amount of objects it detects on current frame
     for detection in range(0, len(result.detections)):
-        #to avoid "index out of range" error for the categories attribute (which is a list), if the length of it is greater than 1,
-        #simply loop through it. if it isn't (look at else block), just take the first index (the only available index) and use that.
-        if len(result.detections[detection].categories) > 1:
-            for i in range(0, len(result.detections[detection].categories)):
-                print(f"object: {result.detections[detection].categories[i].category_name}")
-                print(f"confidence: {result.detections[detection].categories[i].score}")
-                print(f"x: {result.detections[detection].bounding_box.origin_x}")
-                print(f"y: {result.detections[detection].bounding_box.origin_y}")
-                print(f"width: {result.detections[detection].bounding_box.width}")
-                print(f"height: {result.detections[detection].bounding_box.height}")
-        else:
-            print(f"object: {result.detections[detection].categories[0].category_name}")
-            print(f"confidence: {result.detections[detection].categories[0].score}")
-            print(f"x: {result.detections[detection].bounding_box.origin_x}")
-            print(f"y: {result.detections[detection].bounding_box.origin_y}")
-            print(f"width: {result.detections[detection].bounding_box.width}")
-            print(f"height: {result.detections[detection].bounding_box.height}")
-
+        
         #boxes + labels fields
         bbox = result.detections[detection].bounding_box
         starting_point = bbox.origin_x, bbox.origin_y
         ending_point = bbox.origin_x + bbox.width, bbox.origin_y + bbox.height
 
         #draw bounding boxes
-        cv2.rectangle(ndarray_img, starting_point, ending_point, (0, 255, 0), 3) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
-                                                                                                                    #image HAS TO BE A NUMPY ARRAY FORM
+        cv2.rectangle(ndarray_img,
+            starting_point,
+            ending_point,
+            (0, 255, 0),
+            3
+        ) # cv2.rectangle PARAMS: cv2.rectangle(image, start_point, end_point, color, thickness)
+                                                #image argument HAS TO BE A NUMPY ARRAY FORM
 
         #label boxes (object detections)
         cv2.putText(
@@ -75,14 +58,6 @@ def on_result(result, output_image: mp.Image, timestamp_ms: int): # the ": type"
         ) #PARAMS: cv2.putText(image, text, org, fontFace, fontScale, color, thickness)
 
     
-    print() #add a space/line break for eligibility for terminal output
-
-    
-
-
-
-
-    
 #model params
 options = ObjectDetectorOptions(
     base_options=BaseOptions(model_asset_path="models/efficientdet_lite0_float32.tflite"),
@@ -91,6 +66,7 @@ options = ObjectDetectorOptions(
     max_results=5, #will at most return the first n objects it sees (in this case 5)
     result_callback=on_result,
 )
+
 
 #initiating ndarray_img global variable
 ndarray_img = None
@@ -107,12 +83,12 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
                     # 500 pixels rows/height, 500 width/length/columns, 3 color channels(each 0-255)
         ret, frame = camera.read()
 
-        #flip horizontally so everything looks normal
-        frame = cv2.flip(frame, 1)
-
         #if ret not returned/retrieved, break out of loop
         if not ret:
             break
+
+        #flip horizontally so everything looks normal
+        frame = cv2.flip(frame, 1)
 
         #display window w/ frame showing live camera feed
         if ndarray_img is None:
@@ -148,10 +124,6 @@ with ObjectDetector.create_from_options(options) as detector: #initialize object
         #let user break out of the webcam by pressing q
         if cv2.waitKey(1) == ord('q'):
             break
-
-
-
-
 
 
 #stop windows and camera after breaking out of loop
